@@ -1,0 +1,95 @@
+{
+  "name": "safe-web-tier",
+  "description": "Classic Internet → DMZ → Application → Data layout with strict default-deny posture and explicit classifications.",
+  "zones": {
+    "INTERNET": {
+      "cidr": "0.0.0.0/0",
+      "classification": "internet"
+    },
+    "DMZ": {
+      "cidr": "10.0.1.0/24",
+      "classification": "public",
+      "description": "Public-facing web tier"
+    },
+    "APPLICATION": {
+      "cidr": "10.0.2.0/24",
+      "classification": "application"
+    },
+    "DATA": {
+      "cidr": "10.0.3.0/24",
+      "classification": "sensitive",
+      "description": "PostgreSQL and internal data stores"
+    },
+    "MANAGEMENT": {
+      "cidr": "10.0.4.0/24",
+      "classification": "management",
+      "description": "Jump hosts / bastion"
+    }
+  },
+  "sample_ips": {
+    "web01": "10.0.1.20",
+    "app01": "10.0.2.20",
+    "db01": "10.0.3.20",
+    "admin01": "10.0.4.20",
+    "external": "203.0.113.50"
+  },
+  "rules": [
+    {
+      "source": "INTERNET",
+      "destination": "DMZ",
+      "protocol": "tcp",
+      "port": 443,
+      "action": "ALLOW",
+      "description": "Public HTTPS to web tier"
+    },
+    {
+      "source": "DMZ",
+      "destination": "APPLICATION",
+      "protocol": "tcp",
+      "port": 8443,
+      "action": "ALLOW",
+      "description": "Web → application (internal API)"
+    },
+    {
+      "source": "APPLICATION",
+      "destination": "DATA",
+      "protocol": "tcp",
+      "port": 5432,
+      "action": "ALLOW",
+      "description": "Application → PostgreSQL"
+    },
+    {
+      "source": "MANAGEMENT",
+      "destination": "DMZ",
+      "protocol": "tcp",
+      "port": 22,
+      "action": "ALLOW",
+      "description": "Jump-host SSH into DMZ"
+    },
+    {
+      "source": "MANAGEMENT",
+      "destination": "APPLICATION",
+      "protocol": "tcp",
+      "port": 22,
+      "action": "ALLOW",
+      "description": "Jump-host SSH into application tier"
+    },
+    {
+      "source": "MANAGEMENT",
+      "destination": "DATA",
+      "protocol": "tcp",
+      "port": 22,
+      "action": "ALLOW",
+      "description": "Jump-host SSH into data tier"
+    },
+    {
+      "source": "INTERNET",
+      "destination": "DATA",
+      "protocol": "tcp",
+      "port": 5432,
+      "action": "DENY",
+      "description": "Explicit deny — no public database access"
+    }
+  ],
+  "policy_semantics": "first-match"
+}

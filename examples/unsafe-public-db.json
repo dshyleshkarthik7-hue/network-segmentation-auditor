@@ -1,0 +1,64 @@
+{
+  "name": "unsafe-public-db",
+  "description": "Demonstrates both direct SENSITIVE_INGRESS and the value of explicit classifications.",
+  "zones": {
+    "INTERNET": {
+      "cidr": "0.0.0.0/0",
+      "classification": "internet"
+    },
+    "DMZ": {
+      "cidr": "10.0.1.0/24",
+      "classification": "public"
+    },
+    "APPLICATION": {
+      "cidr": "10.0.2.0/24",
+      "classification": "application"
+    },
+    "DATA": {
+      "cidr": "10.0.3.0/24",
+      "classification": "sensitive"
+    },
+    "MANAGEMENT": {
+      "cidr": "10.0.4.0/24",
+      "classification": "management"
+    }
+  },
+  "sample_ips": {
+    "web01": "10.0.1.20",
+    "db01": "10.0.3.20"
+  },
+  "rules": [
+    {
+      "source": "INTERNET",
+      "destination": "DMZ",
+      "protocol": "tcp",
+      "port": 443,
+      "action": "ALLOW",
+      "description": "Public HTTPS"
+    },
+    {
+      "source": "DMZ",
+      "destination": "APPLICATION",
+      "protocol": "tcp",
+      "port": 8443,
+      "action": "ALLOW",
+      "description": "Web → app"
+    },
+    {
+      "source": "APPLICATION",
+      "destination": "DATA",
+      "protocol": "tcp",
+      "port": 5432,
+      "action": "ALLOW",
+      "description": "App → DB"
+    },
+    {
+      "source": "INTERNET",
+      "destination": "DATA",
+      "protocol": "tcp",
+      "port": 5432,
+      "action": "ALLOW",
+      "description": "DANGEROUS: public database access"
+    }
+  ]
+}

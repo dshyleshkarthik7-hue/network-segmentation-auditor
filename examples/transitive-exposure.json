@@ -1,0 +1,40 @@
+{
+  "name": "transitive-exposure",
+  "description": "Internet reaches DATA via APPLICATION without a public/DMZ entry point. Demonstrates HIGH TRANSITIVE_SENSITIVE_REACHABILITY (unexpected tiering).",
+  "zones": {
+    "INTERNET": {
+      "cidr": "0.0.0.0/0",
+      "classification": "internet"
+    },
+    "APPLICATION": {
+      "cidr": "10.0.2.0/24",
+      "classification": "application"
+    },
+    "DATA": {
+      "cidr": "10.0.3.0/24",
+      "classification": "sensitive"
+    }
+  },
+  "sample_ips": {
+    "app": "10.0.2.10",
+    "db": "10.0.3.10"
+  },
+  "rules": [
+    {
+      "source": "INTERNET",
+      "destination": "APPLICATION",
+      "protocol": "tcp",
+      "port": 443,
+      "action": "ALLOW",
+      "description": "Public traffic lands directly on application tier (no DMZ)"
+    },
+    {
+      "source": "APPLICATION",
+      "destination": "DATA",
+      "protocol": "tcp",
+      "port": 5432,
+      "action": "ALLOW",
+      "description": "App → Data"
+    }
+  ]
+}

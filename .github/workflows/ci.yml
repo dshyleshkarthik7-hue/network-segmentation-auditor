@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install package + dev tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff
+        run: ruff check .
+
+      - name: Pytest
+        run: pytest -q
+
+      - name: Mypy
+        run: mypy seg_audit
+        continue-on-error: ${{ matrix.python == '3.9' }}
+
+      - name: Smoke — safe example
+        env:
+          PYTHONIOENCODING: utf-8
+        run: network-segmentation-auditor -c examples/safe-web-tier.json --exit-code
+
+      - name: Smoke — transitive exposure (expect exit 2)
+        env:
+          PYTHONIOENCODING: utf-8
+        shell: bash
+        run: |
+          set +e
+          network-segmentation-auditor -c examples/transitive-exposure.json --exit-code --json-only
+          code=$?
+          if [ "$code" -ne 2 ]; then
+            echo "Expected exit code 2, got $code"
+            exit 1
+          fi
+
+      - name: Smoke — unsafe public DB (expect exit 2)
+        env:
+          PYTHONIOENCODING: utf-8
+        shell: bash
+        run: |
+          set +e
+          network-segmentation-auditor -c examples/unsafe-public-db.json --exit-code --json-only
+          code=$?
+          if [ "$code" -ne 2 ]; then
+            echo "Expected exit code 2, got $code"
+            exit 1
+          fi

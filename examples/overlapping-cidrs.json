@@ -1,0 +1,35 @@
+{
+  "name": "overlapping-cidrs",
+  "description": "Demonstrates CIDR_OVERLAP detection when two zones share address space.",
+  "zones": {
+    "INTERNET": {
+      "cidr": "0.0.0.0/0",
+      "classification": "internet"
+    },
+    "DMZ": {
+      "cidr": "10.0.0.0/16",
+      "classification": "public"
+    },
+    "APPLICATION": {
+      "cidr": "10.0.2.0/24",
+      "classification": "application"
+    },
+    "DATA": {
+      "cidr": "10.0.3.0/24",
+      "classification": "sensitive"
+    }
+  },
+  "sample_ips": {
+    "host": "10.0.2.50"
+  },
+  "rules": [
+    {
+      "source": "INTERNET",
+      "destination": "DMZ",
+      "protocol": "tcp",
+      "port": 443,
+      "action": "ALLOW",
+      "description": "Public HTTPS"
+    }
+  ]
+}
